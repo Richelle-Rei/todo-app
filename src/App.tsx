@@ -10,25 +10,28 @@ type ToDoEntry = {
 function App() {
   const [inputText, setInputText] = useState('')
   const [toDoList, setToDoList] = useState<ToDoEntry[]>([])
+  const [loading, setLoading] = useState(false)
   const count =  toDoList.filter((entry)=> !entry.completed).length
 
   async function getData() {
-    const url = "https://jsonplaceholder.typicode.com/todos?_limit=5";
+    const url = "https://jsonplaceholder.typicode.com/todos?_limit=5"
     try {
-      const response = await fetch(url);
+      setLoading(true)
+      const response = await fetch(url)
       if (!response.ok) {
         const error = new Error(`Response status: ${response.status}`)
-        throw error;
+        throw error
       }
-      let json = await response.json()
-      // console.log(json);
-
-      let initialData = json.map((entry:any) => ({description: entry.title, completed: entry.completed}))
-      // console.log(initialData)
-      
+      const json = await response.json()
+    
+      const initialData = json.map((entry:any) => ({description: entry.title, completed: entry.completed}))
       setToDoList(initialData)
+      console.log(initialData)
+
     } catch (error : any) {
-      console.error(error.message);
+      console.error(error.message)
+    } finally{
+      setLoading(false)
     }
   }
 
@@ -48,13 +51,13 @@ function App() {
   function DeleteEntry(index: number){
     if(!toDoList[index].completed){
     }
-    let newList = toDoList.filter((_, i) => i !== index)
+    const newList = toDoList.filter((_, i) => i !== index)
     setToDoList(newList)
     // console.log(toDoList)
   }
 
   function checkEntry(index: number){
-    let newList = [...toDoList]
+    const newList = [...toDoList]
     newList[index].completed = !newList[index].completed
     setToDoList(newList)
   }
@@ -79,10 +82,16 @@ function App() {
               className='flex-none py-2 px-4 rounded-sm ml-3 bg-blue-500 text-white hover:bg-blue-700 '>+ Add</button>
           </div>
 
-          <div className='text-neutral-600 my-3.5'> {count} active tasks</div>
+          <div className='text-neutral-600 my-3.5'> {count>0? count + " active tasks":""}</div>
 
           <div className='flex place-content-center'>
-            {toDoList.length>0?null:<div className='text-neutral-500 my-10'>No To Dos yet. Add one above!</div>}
+            {!loading && (toDoList.length>0?null:<div className='text-neutral-500 my-10'>No To Dos yet. Add one above!</div>)}
+
+            
+            {loading && <div className='my-10'><svg className="size-6 animate-spin text-slate-500 mx-auto;" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" >
+            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
+            </svg></div>}
+
           </div> 
 
           <ul className='mt-4'>
