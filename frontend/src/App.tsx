@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react'
+import { type ToDoEntry } from './ToDoEntry'
+import {getToDo, createToDo, updateToDo, deleteToDo} from './fetchcalls'
 // import reactLogo from './assets/react.svg'
 // import viteLogo from '/vite.svg'
-
-type ToDoEntry = {
-  description: string
-  completed: boolean
-}
+const url = "http://localhost:3000/todos"
 
 function App() {
   const [inputText, setInputText] = useState('')
@@ -13,24 +11,36 @@ function App() {
   const [loading, setLoading] = useState(false)
   const count =  toDoList.filter((entry)=> !entry.completed).length
 
-  async function getData() {
-    const url = "https://jsonplaceholder.typicode.com/todos?_limit=5"
-    try {
-      setLoading(true)
-      const response = await fetch(url)
-      if (!response.ok) {
-        const error = new Error(`Response status: ${response.status}`)
-        throw error
-      }
-      const json = await response.json()
+  // async function getData() {
+  //   const url = "https://jsonplaceholder.typicode.com/todos?_limit=5"
+  //   try {
+  //     setLoading(true)
+  //     const response = await fetch(url)
+  //     if (!response.ok) {
+  //       const error = new Error(`Response status: ${response.status}`)
+  //       throw error
+  //     }
+  //     const json = await response.json()
     
-      const initialData = json.map((entry:any) => ({description: entry.title, completed: entry.completed}))
-      setToDoList(initialData)
-      console.log(initialData)
+  //     const initialData = json.map((entry:any) => ({description: entry.title, completed: entry.completed}))
+  //     setToDoList(initialData)
+  //     console.log(initialData)
 
-    } catch (error : any) {
+  //   } catch (error : any) {
+  //     console.error(error.message)
+  //   } finally{
+  //     setLoading(false)
+  //   }
+  // }
+
+  async function getData() {
+    try{
+      setLoading(true)
+      const initialData = await getToDo()
+      setToDoList(initialData)
+    }catch(error : any){
       console.error(error.message)
-    } finally{
+    }finally{
       setLoading(false)
     }
   }
@@ -40,26 +50,53 @@ function App() {
     // console.log('on mount')
   }, [])
 
-  function AddEntry(){
+  async function AddEntry(){
     if (!inputText.trim()){
       return
     }
-    setToDoList([...toDoList, {completed: false, description: inputText.trim()}])
-    setInputText('')
-  }
 
-  function DeleteEntry(index: number){
-    if(!toDoList[index].completed){
+    try{
+      setLoading(true)
+      await createToDo(inputText)
+      await getData()
+      setInputText('')
+    }catch(error : any){
+      console.error(error.message)
+    }finally{
+      setLoading(false)
+    
+    // setToDoList([...toDoList, {userid:1, id: toDoList[toDoList.length-1].id+1 , completed: false, title: inputText.trim()}])
+    // setInputText('')
+  }}
+
+  async function DeleteEntry(index: number){
+    try{
+      await deleteToDo(index)
+      await getData()
+    }catch(error : any){
+      console.error(error.message)
     }
-    const newList = toDoList.filter((_, i) => i !== index)
-    setToDoList(newList)
+
+    // const newList = toDoList.filter((_, i) => i !== index)
+    // setToDoList(newList)
     // console.log(toDoList)
   }
 
-  function checkEntry(index: number){
-    const newList = [...toDoList]
-    newList[index].completed = !newList[index].completed
-    setToDoList(newList)
+  async function checkEntry(index: number){
+    try{
+      const todo = toDoList.find(entry => entry.id === index)
+      if(!todo){
+        return
+      }
+      await updateToDo(index)
+      await getData()
+    }catch(error : any){
+      console.error(error.message)
+    }
+
+    // const newList = [...toDoList]
+    // newList[index].completed = !newList[index].completed
+    // setToDoList(newList)
   }
 
   return (
@@ -97,11 +134,11 @@ function App() {
           <ul className='mt-4'>
             {toDoList.map((entry, index) => (
               <li key={index} className='flex p-2.5 ring ring-gray-300 rounded-sm items-center my-3 '>
-                <input type="checkbox" checked={entry.completed} onChange={()=>checkEntry(index)} className='mx-1 size-4'/>
-                {entry.completed? <div className='text-neutral-600 mx-2 flex-1 line-through decoration-neutral-600'>{entry.description}</div> 
-                : <div className='text-neutral-600 mx-2 flex-1 '>{entry.description}</div>}
+                <input type="checkbox" checked={entry.completed} onChange={()=>checkEntry(entry.id)} className='mx-1 size-4'/>
+                {entry.completed? <div className='text-neutral-600 mx-2 flex-1 line-through decoration-neutral-600'>{entry.title}</div> 
+                : <div className='text-neutral-600 mx-2 flex-1 '>{entry.title}</div>}
 
-                <button onClick={()=>DeleteEntry(index)}>
+                <button onClick={()=>DeleteEntry(entry.id)}>
                   <svg className='size-4.5 text-red-600 mx-2' 
                   xmlns="http://www.w3.org/2000/svg" fill="none" 
                   viewBox="0 0 24 24" strokeWidth="2" stroke="currentColor" >
@@ -120,6 +157,7 @@ function App() {
     </>
   )
 }
+
 export default App
 
 
