@@ -67,10 +67,6 @@ func addToDo(c echo.Context) error{
 	return c.JSON(http.StatusCreated, newTodo)
 }
 
-// func updateToDo(c echo.Context) error{
-// 	return c.JSON(http.StatusNotFound, "error")
-// }
-
 func updateToDo(c echo.Context) error {
 	id, err := strconv.Atoi(c.Param("id"))
 	if err != nil {
