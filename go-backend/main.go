@@ -62,7 +62,6 @@ func getToDoSQL(c echo.Context, db *sql.DB) error {
 
 	if err != nil {
 		log.Println("Database Query Error", err)
-		fmt.Println("Database Query Error")
 		return c.JSON(http.StatusBadRequest, "Database Query Error")
 	}
 
@@ -73,7 +72,6 @@ func getToDoSQL(c echo.Context, db *sql.DB) error {
 		err := rows.Scan(&each.UserId, &each.Id, &each.Title, &each.Completed)
 		if err != nil {
 			log.Println("Database Row Scan Error", err)
-			fmt.Println("Database Row Scan Error")
 			return c.JSON(http.StatusBadRequest, "Database Row Scan Error")
 		}
 
@@ -115,7 +113,7 @@ func UpdateToDoSQL(c echo.Context, db *sql.DB) error {
 	}
 
 	var updatedData struct {
-		Completed bool `json:"completed" db:"completed`
+		Completed bool `json:"completed" db:"completed"`
 	}
 
 	if err := c.Bind(&updatedData); err != nil {
