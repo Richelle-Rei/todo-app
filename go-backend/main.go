@@ -33,8 +33,7 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.CORS())
 
-
-	connStr := "user=richellereivanka dbname=tododb sslmode=disable"
+	connStr := "user=postgres dbname=tododb sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
