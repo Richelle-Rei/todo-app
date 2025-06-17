@@ -33,11 +33,11 @@ export async function createToDo(title: string): Promise<ToDoEntry> {
     return newToDo
 }
 
-export async function updateToDo (id: number): Promise<ToDoEntry> {
+export async function updateToDo (id: number, completed: boolean): Promise<ToDoEntry> {
     const response = await fetch(`${url}/${id}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({id}),
+      body: JSON.stringify({id, completed}),
     });
     return await response.json();
 };

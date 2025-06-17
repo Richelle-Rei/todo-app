@@ -88,7 +88,7 @@ function App() {
       if(!todo){
         return
       }
-      await updateToDo(index)
+      await updateToDo(index, !todo.completed)
       await getData()
     }catch(error : any){
       console.error(error.message)
