@@ -14,13 +14,13 @@ export async function getToDo(): Promise<ToDoEntry[]> {
     return data
 }
 
-export async function createToDo(title: string): Promise<ToDoEntry> {
+export async function createToDo(title: string, displayOrder: number): Promise<ToDoEntry> {
     const response = await fetch(url, {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ title, completed: false, userId: 1}),
+        body: JSON.stringify({ title, completed: false, userId: 1, displayOrder}),
       })
 
     if (!response.ok) {
@@ -49,5 +49,14 @@ export async function deleteToDo (id:number) {
     if(!response.ok){
         throw new Error(`Error! Response status: ${response.status}`)
     }
+};
+
+export async function updateDisplay (newList: ToDoEntry[]): Promise<ToDoEntry> {
+  const response = await fetch(`${url}/order`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({newList}),
+  });
+  return await response.json();
 };
 
