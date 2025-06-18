@@ -3,5 +3,6 @@ export type ToDoEntry = {
 	id: number
 	title: string
 	completed: boolean
+	order: number
 }
   

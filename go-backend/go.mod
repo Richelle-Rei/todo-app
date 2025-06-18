@@ -3,6 +3,7 @@ module go-backend
 go 1.24.4
 
 require (
+	github.com/go-chi/chi/v5 v5.2.1 // indirect
 	github.com/jmoiron/sqlx v1.4.0 // indirect
 	github.com/labstack/echo/v4 v4.13.4 // indirect
 	github.com/labstack/gommon v0.4.2 // indirect
