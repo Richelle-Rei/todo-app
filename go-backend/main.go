@@ -12,14 +12,18 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
+
+	"github.com/golang-migrate/migrate/v4"
+	_ "github.com/golang-migrate/migrate/v4/database/postgres"
+	_ "github.com/golang-migrate/migrate/v4/source/file"
 )
 
 type ToDoEntry struct {
-	UserId    		int		`json:"userId" db:"user_id"`
-	Id        		int		`json:"id" db:"id"`
-	Title     		string	`json:"title" db:"title"`
-	Completed 		bool	`json:"completed" db:"completed"`
-	DisplayOrder	int		`json:"displayOrder" db:"display_order"`
+	UserId       int    `json:"userId" db:"user_id"`
+	Id           int    `json:"id" db:"id"`
+	Title        string `json:"title" db:"title"`
+	Completed    bool   `json:"completed" db:"completed"`
+	DisplayOrder int    `json:"displayOrder" db:"display_order"`
 }
 
 // var data = []ToDoEntry{
@@ -34,12 +38,22 @@ func main() {
 	e := echo.New()
 	e.Use(middleware.CORS())
 
+	m, err := migrate.New(
+		"file://db/migrations",
+		"postgres://postgres:postgres@localhost:5432/tododb?sslmode=disable")
+	if err != nil {
+		log.Fatal("Error in setting up migration", err)
+	}
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange{
+		log.Fatal("Error in running migration up", err)
+	}
+	defer m.Close()
+
 	connStr := "user=postgres dbname=tododb sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	defer db.Close()
 
 	e.GET("/todos", func(c echo.Context) error { return getToDoListSQL(c, db) })
@@ -148,19 +162,19 @@ func deleteToDoSQL(c echo.Context, db *sql.DB) error {
 
 }
 
-func updateDisplaySQL(c echo.Context, db *sql.DB) error{
+func updateDisplaySQL(c echo.Context, db *sql.DB) error {
 	var updatedData struct {
-        NewList []ToDoEntry `json:"newList"`
-    }
+		NewList []ToDoEntry `json:"newList"`
+	}
 	if err := c.Bind(&updatedData); err != nil {
 		fmt.Print("ToDo Data not found")
 		return c.JSON(http.StatusBadRequest, "ToDo Data not found")
 	}
 
 	_, err := db.Exec("UPDATE todo SET display_order = -id")
-    if err != nil {
-        return c.JSON(http.StatusInternalServerError, "Reset Order Failed")
-    }
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, "Reset Order Failed")
+	}
 
 	for _, each := range updatedData.NewList {
 		_, err := db.Exec("UPDATE todo SET display_order = $1 WHERE id = $2", each.DisplayOrder, each.Id)
