@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { type ToDoEntry } from './ToDoEntry'
-import {  getToDo, createToDo, updateToDo, deleteToDo, updateDisplay } from './fetchcalls'
+import {  getToDo, createToDo, updateToDo, deleteToDo, updateDisplay, editToDo } from './fetchcalls'
 import {  DndContext, type DragEndEvent } from '@dnd-kit/core';
 import {  DraggableToDo } from './DraggableToDo';
 import {  SortableContext, arrayMove  } from '@dnd-kit/sortable';
@@ -34,7 +34,6 @@ function App() {
     }
   }
   
-
   async function getData() {
     try{
       setLoading(true)
@@ -68,7 +67,7 @@ function App() {
 
   }}
 
-  async function DeleteEntry(index: number){
+  async function deleteEntry(index: number){
     try{
       await deleteToDo(index)
       await getData()
@@ -79,7 +78,7 @@ function App() {
 
   async function checkEntry(index: number){
     try{
-      const todo = toDoList.find(entry => entry.id === index)
+      const todo = toDoList.find(entry => entry.id ===index)
       if(!todo){
         return
       }
@@ -88,7 +87,19 @@ function App() {
     }catch(error : any){
       console.error(error.message)
     }
+  }
 
+  async function editEntry(index: number, newtitle: string) {
+    try{
+      const todo = toDoList.find(entry => entry.id == index)
+      if(!todo || !newtitle.trim() || newtitle == todo.title){
+        return
+      }
+      await editToDo(index, newtitle)
+      await getData()
+    }catch(error : any){
+      console.error(error.message)
+    }
   }
 
   return (
@@ -104,7 +115,7 @@ function App() {
               <input id='ToDoInput' value={inputText}
               onChange={(text) => setInputText(text.target.value)}
               placeholder='Add a new to do...'
-              onKeyUp={(e) => e.key == 'Enter' && AddEntry()}
+              onKeyUp={(e) => e.key == 'Enter' && AddEntry() }
               className='flex-1 w-xs p-2 ring rounded-sm ring-gray-300 text-neutral-600'></input>
               
               <button id='AddEntryButton' onClick={AddEntry} 
@@ -126,7 +137,7 @@ function App() {
           <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
           <SortableContext items={toDoList}>
           <ul className='mt-4'>
-            {toDoList.map((entry, _) => (<DraggableToDo key={entry.id} id ={entry.id} entry = {entry} onCheck={checkEntry} onDelete = {DeleteEntry}/>
+            {toDoList.map((entry, _) => (<DraggableToDo key={entry.id} id ={entry.id} entry = {entry} onCheck={checkEntry} onDelete = {deleteEntry} onEdit={editEntry}/>
               ))}
           </ul>
           </SortableContext>
