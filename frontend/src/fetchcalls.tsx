@@ -1,5 +1,6 @@
 import { type ToDoEntry } from "./ToDoEntry"
-const url = "http://localhost:3000/todos"
+
+const url = import.meta.env.VITE_BACKEND_URL + "/todos"
 
 export async function getToDo(): Promise<ToDoEntry[]> {
     const response = await fetch(url)
@@ -56,6 +57,15 @@ export async function updateDisplay (newList: ToDoEntry[]): Promise<ToDoEntry> {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({newList}),
+  });
+  return await response.json();
+};
+
+export async function editToDo (id:number, title: string): Promise<ToDoEntry> {
+  const response = await fetch(`${url}/${id}/edit`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({title}),
   });
   return await response.json();
 };
