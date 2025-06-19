@@ -60,3 +60,12 @@ export async function updateDisplay (newList: ToDoEntry[]): Promise<ToDoEntry> {
   return await response.json();
 };
 
+export async function editToDo (id:number, title: string): Promise<ToDoEntry> {
+  const response = await fetch(`${url}/${id}/edit`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({title}),
+  });
+  return await response.json();
+};
+
