@@ -10,6 +10,9 @@ import (
 
 	"database/sql"
 	"log"
+	"os"
+
+	"github.com/joho/godotenv"
 
 	_ "github.com/lib/pq"
 
@@ -37,19 +40,21 @@ type ToDoEntry struct {
 func main() {
 	e := echo.New()
 	e.Use(middleware.CORS())
+	godotenv.Load(".env")
 
 	m, err := migrate.New(
 		"file://db/migrations",
-		"postgres://postgres:postgres@localhost:5432/tododb?sslmode=disable")
+		os.Getenv("SQL_URL"),
+	)
 	if err != nil {
 		log.Fatal("Error in setting up migration", err)
 	}
-	if err := m.Up(); err != nil && err != migrate.ErrNoChange{
+	if err := m.Up(); err != nil && err != migrate.ErrNoChange {
 		log.Fatal("Error in running migration up", err)
 	}
 	defer m.Close()
 
-	connStr := "user=postgres dbname=tododb sslmode=disable"
+	connStr := os.Getenv("CONNECT_URL")
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
@@ -59,6 +64,7 @@ func main() {
 	e.GET("/todos", func(c echo.Context) error { return getToDoListSQL(c, db) })
 	e.POST("/todos", func(c echo.Context) error { return addToDoSQL(c, db) })
 	e.PUT("/todos/:id", func(c echo.Context) error { return updateToDoSQL(c, db) })
+	e.PUT("/todos/:id/edit", func(c echo.Context) error { return editToDoSQL(c, db) })
 	e.PUT("/todos/order", func(c echo.Context) error { return updateDisplaySQL(c, db) })
 	e.DELETE("/todos/:id", func(c echo.Context) error { return deleteToDoSQL(c, db) })
 
@@ -136,6 +142,35 @@ func updateToDoSQL(c echo.Context, db *sql.DB) error {
 		return c.JSON(http.StatusBadRequest, "Completed not found")
 	}
 	_, err = db.Exec("UPDATE todo SET completed = $1 WHERE id = $2", updatedData.Completed, id)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return c.JSON(http.StatusBadRequest, "Update Completed Error")
+	}
+
+	return getToDoListSQL(c, db)
+
+}
+
+func editToDoSQL(c echo.Context, db *sql.DB) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		return c.JSON(http.StatusBadRequest, "ID not found")
+	}
+
+	var updatedData struct {
+		Title string `json:"title" db:"title"`
+	}
+
+	if err := c.Bind(&updatedData); err != nil {
+		return c.JSON(http.StatusBadRequest, "Edited title not found")
+	}
+
+	if updatedData.Title == "" {
+		return c.JSON(http.StatusBadRequest, "Title cannot be empty")
+	}
+
+	_, err = db.Exec("UPDATE todo SET title = $1 WHERE id = $2", updatedData.Title, id)
 
 	if err != nil {
 		fmt.Println(err.Error())
