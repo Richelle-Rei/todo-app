@@ -126,7 +126,7 @@ function App() {
           <DndContext modifiers={[restrictToVerticalAxis]} onDragEnd={handleDragEnd}>
           <SortableContext items={toDoList}>
           <ul className='mt-4'>
-            {toDoList.map((entry, index) => (<DraggableToDo key={entry.id} id ={entry.id} entry = {entry} onCheck={checkEntry} onDelete = {DeleteEntry}/>
+            {toDoList.map((entry, _) => (<DraggableToDo key={entry.id} id ={entry.id} entry = {entry} onCheck={checkEntry} onDelete = {DeleteEntry}/>
               ))}
           </ul>
           </SortableContext>
